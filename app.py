@@ -5,6 +5,8 @@ from PyMultiDictionary import (
     DICT_WORDNET,
 )
 import pyttsx3
+import json
+import os
 
 
 class Speaking:
@@ -18,9 +20,24 @@ class Speaking:
         self.engine.runAndWait()
 
 
+def load_statistics():
+    if os.path.exists("stats.json"):
+        with open("stats.json", "r") as file:
+            return json.load(file)
+    return {"queries": 0, "meanings": 0, "synonyms": 0, "antonyms": 0}
+
+
+def save_statistics(stats):
+    with open("stats.json", "w") as file:
+        json.dump(stats, file)
+
+
 def get_word_info():
     dictionary = MultiDictionary()
     speak = Speaking()
+
+    stats = load_statistics()
+    stats["queries"] += 1
 
     word = input("Enter a word: ").strip()
     if not word:
@@ -35,6 +52,7 @@ def get_word_info():
     )
 
     if choice == "m":
+        stats["meanings"] += 1
         try:
             meanings = dictionary.meaning("en", word, dictionary=DICT_WORDNET)
             if meanings:
@@ -50,6 +68,7 @@ def get_word_info():
             speak.speak("An error occurred while fetching the meaning.")
 
     elif choice == "s":
+        stats["synonyms"] += 1
         try:
             synonyms = dictionary.synonym("en", word)
             if synonyms:
@@ -65,6 +84,7 @@ def get_word_info():
             speak.speak("An error occurred while fetching synonyms.")
 
     elif choice == "a":
+        stats["antonyms"] += 1
         try:
             antonyms = dictionary.antonym("en", word)
             if antonyms:
@@ -82,6 +102,8 @@ def get_word_info():
     else:
         print("Invalid choice. Please enter 'm', 's', or 'a'.")
         speak.speak("Invalid choice. Please try again.")
+
+    save_statistics(stats)
 
 
 if __name__ == "__main__":
